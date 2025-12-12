@@ -68,6 +68,32 @@ class OrdenTrabajoSerializer(serializers.ModelSerializer):
 		]
 		read_only_fields = ['id', 'fecha_solicitud']
 
+def validate(self, data):
+        
+    # Validar que la fecha de fin no sea anterior a la de inicio
+    fecha_inicio = data.get('fecha_inicio')
+    fecha_fin = data.get('fecha_fin')
+
+    if fecha_inicio and fecha_fin and fecha_fin < fecha_inicio:
+        raise serializers.ValidationError({
+            "fecha_fin": "La fecha de fin no puede ser anterior a la fecha de inicio."
+        })
+
+    # Validar que si la orden está finalizada, tenga fecha de fin
+    if data.get('estado') == 'FIN' and not fecha_fin:
+            raise serializers.ValidationError({
+            "estado": "No puedes finalizar una orden sin registrar la fecha de fin."
+        })
+
+    # Validar que el costo real no sea negativo
+    costo_real = data.get('costo_real')
+    if costo_real is not None and costo_real < 0:
+            raise serializers.ValidationError({
+            "costo_real": "El costo real no puede ser negativo."
+        })
+
+    return data
+
 
 class UserSerializer(serializers.ModelSerializer):
 	"""Serializer para el modelo User."""
